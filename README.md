@@ -1,5 +1,9 @@
 # 💰 Dashboard Financeiro React
 
+![React](https://img.shields.io/badge/React-19.2.4-blue?logo=react)
+![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4.19-green?logo=tailwind-css)
+![Vite](https://img.shields.io/badge/Vite-7.2.5-purple?logo=vite)
+
 ![Dashboard Screenshot](screenshot-dashboard.png)
 
 ## Sobre o Projeto

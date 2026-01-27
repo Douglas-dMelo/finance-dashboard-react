@@ -20,4 +20,4 @@ Projeto de Dashboard Financeiro em React + Vite + Tailwind CSS, com gráficos de
 1. Clone o repositório:
 
 ```bash
-git clone https://github.com/seu-usuario/finance-dashboard-react.git
+git clone https://github.com/Douglas-dMelo/finance-dashboard-react.git

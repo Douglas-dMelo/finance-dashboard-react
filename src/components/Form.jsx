@@ -17,29 +17,77 @@ export default function Form({ onAdd }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded-2xl shadow mb-6">
+    <form
+      onSubmit={handleSubmit}
+      className="
+        bg-white/10 backdrop-blur
+        border border-white/10
+        p-6 rounded-3xl shadow-lg
+        mb-6 space-y-4
+        max-w-2xl mx-auto
+      "
+    >
+      {/* DESCRIÇÃO */}
       <input
-        className="border p-2 w-full mb-2 rounded"
+        type="text"
         placeholder="Descrição"
         value={form.description}
-        onChange={(e) => setForm({ ...form, description: e.target.value })}
+        onChange={(e) =>
+          setForm({ ...form, description: e.target.value })
+        }
+        className="
+          w-full bg-zinc-900/80 text-white
+          placeholder-zinc-400
+          border border-white/10
+          rounded-xl px-4 py-3
+          focus:outline-none focus:ring-2 focus:ring-blue-500
+        "
       />
+
+      {/* VALOR */}
       <input
         type="number"
-        className="border p-2 w-full mb-2 rounded"
         placeholder="Valor"
         value={form.amount}
-        onChange={(e) => setForm({ ...form, amount: e.target.value })}
+        onChange={(e) =>
+          setForm({ ...form, amount: e.target.value })
+        }
+        className="
+          w-full bg-zinc-900/80 text-white
+          placeholder-zinc-400
+          border border-white/10
+          rounded-xl px-4 py-3
+          focus:outline-none focus:ring-2 focus:ring-blue-500
+        "
       />
+
+      {/* TIPO */}
       <select
-        className="border p-2 w-full mb-2 rounded"
         value={form.type}
-        onChange={(e) => setForm({ ...form, type: e.target.value })}
+        onChange={(e) =>
+          setForm({ ...form, type: e.target.value })
+        }
+        className="
+          w-full bg-zinc-900/80 text-white
+          border border-white/10
+          rounded-xl px-4 py-3
+          focus:outline-none focus:ring-2 focus:ring-blue-500
+        "
       >
         <option value="income">Entrada</option>
         <option value="expense">Saída</option>
       </select>
-      <button type="submit" className="bg-black text-white px-4 py-2 rounded-xl w-full">
+
+      {/* BOTÃO */}
+      <button
+        type="submit"
+        className="
+          w-full bg-gradient-to-r from-blue-500 to-blue-600
+          text-white font-semibold
+          py-3 rounded-xl
+          hover:opacity-90 transition
+        "
+      >
         Adicionar
       </button>
     </form>

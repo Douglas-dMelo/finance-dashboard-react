@@ -14,11 +14,13 @@ export function useTransactions() {
   }, [transactions]);
 
   const addTransaction = (transaction) => {
-    setTransactions([...transactions, transaction]);
+    setTransactions((prev) => [...prev, transaction]);
   };
 
   const removeTransaction = (index) => {
-    setTransactions(transactions.filter((_, i) => i !== index));
+    setTransactions((prev) =>
+      prev.filter((_, i) => i !== index)
+    );
   };
 
   const income = transactions
@@ -31,5 +33,12 @@ export function useTransactions() {
 
   const balance = income - expense;
 
-  return { transactions, addTransaction, removeTransaction, income, expense, balance };
+  return {
+    transactions,
+    addTransaction,
+    removeTransaction,
+    income,
+    expense,
+    balance,
+  };
 }

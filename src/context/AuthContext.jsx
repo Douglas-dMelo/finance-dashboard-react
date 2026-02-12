@@ -1,41 +1,56 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const [user, setUser] = useState(null);
 
-  async function login(email) {
-    try {
-      const response = await fetch(
-        `http://localhost:3001/users?email=${email}`
-      );
-      const data = await response.json();
+  // 🔄 Carrega usuário salvo ao iniciar app
+  useEffect(() => {
+    const savedUser = localStorage.getItem("finance-user");
 
-      if (data.length === 0) {
-        alert("Usuário não encontrado");
-        return;
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error("Erro ao recuperar usuário:", error);
+        localStorage.removeItem("finance-user");
       }
-
-      const loggedUser = data[0];
-      setUser(loggedUser);
-      localStorage.setItem("user", JSON.stringify(loggedUser));
-    } catch (error) {
-      console.error("Erro ao fazer login:", error);
-      alert("Erro ao conectar com o servidor");
     }
+  }, []);
+
+  // 🔐 Login (modo estudo - sem backend real)
+  function login(email) {
+    if (!email || !email.includes("@")) {
+      alert("Digite um email válido");
+      return;
+    }
+
+    const newUser = {
+      id: crypto.randomUUID(),
+      email,
+      createdAt: new Date().toISOString(),
+    };
+
+    setUser(newUser);
+    localStorage.setItem("finance-user", JSON.stringify(newUser));
   }
 
+  // 🚪 Logout
   function logout() {
     setUser(null);
-    localStorage.removeItem("user");
+    localStorage.removeItem("finance-user");
   }
 
+  const value = {
+    user,
+    login,
+    logout,
+    isAuthenticated: !!user,
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

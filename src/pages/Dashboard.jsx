@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 // Componentes gerais
+import Header from "@/components/Header";
 import Card from "@/components/Card";
 import Form from "@/components/Form";
 import List from "@/components/List";
@@ -38,7 +39,7 @@ export default function Dashboard() {
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    const data = localStorage.getItem("finance-dashboard");
+    const data = localStorage.getItem(`finance-${user?.email}`)
     if (data) setTransactions(JSON.parse(data).transactions || []);
   }, []);
 
@@ -81,7 +82,7 @@ export default function Dashboard() {
         transition-colors duration-300"
       >
         <div className="max-w-6xl mx-auto space-y-10">
-
+        <Header />
           {/* HEADER */}
           <div className="flex items-center justify-between">
             <div>

@@ -1,25 +1,33 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-// Componentes gerais
+import {
+  getTransactions,
+  createTransaction,
+  deleteTransaction,
+} from "@/services/transactionService";
+
 import Card from "@/components/Card";
 import Form from "@/components/Form";
 import List from "@/components/List";
 import FinanceChart from "@/components/FinanceChart";
-
-// Crédito
 import CreditSection from "@/components/credit/CreditSection";
 import { CreditProvider } from "@/components/credit/CreditContext";
 
 export default function Dashboard() {
-  const { user } = useAuth(); // ✅ agora temos o user
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  // 🔒 Proteção
+  if (!user) return null;
 
   // =========================
-  // 🎨 CONTROLE DE TEMA
+  // 🎨 TEMA
   // =========================
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("theme") || "dark";
-  });
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("theme") || "dark"
+  );
 
   useEffect(() => {
     const root = document.documentElement;
@@ -37,93 +45,106 @@ export default function Dashboard() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   }
 
+  function handleLogout() {
+    logout();
+    navigate("/login");
+  }
+
   // =========================
-  // 💰 TRANSAÇÕES (MULTIUSER)
+  // 💰 TRANSAÇÕES
   // =========================
   const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState("all");
 
-  // Carregar dados do usuário logado
   useEffect(() => {
     if (!user) return;
 
-    const data = localStorage.getItem(`finance-${user.email}`);
+    async function loadTransactions() {
+      try {
+        const data = await getTransactions(user.id);
+        setTransactions(data);
+      } catch (error) {
+        console.error("Erro ao buscar transações:", error);
+      }
+    }
 
-    if (data) {
-     setTransactions(JSON.parse(data));
-    } else {
-     setTransactions([]);
-   }
-}, [user]);
+    loadTransactions();
+  }, [user]);
 
-  // Salvar dados do usuário logado
-  useEffect(() => {
-    if (!user) return;
-
-    localStorage.setItem(
-      `finance-${user.email}`,
-    JSON.stringify(transactions)
-  );
-}, [transactions, user]);
-
-
+  // 🔹 Totais
   const totals = transactions.reduce(
     (acc, t) => {
-      if (t.type === "income") acc.income += t.amount;
-      else acc.expense += t.amount;
+      if (t.type === "income") acc.income += Number(t.amount);
+      else acc.expense += Number(t.amount);
       acc.balance = acc.income - acc.expense;
       return acc;
     },
     { income: 0, expense: 0, balance: 0 }
   );
 
-  function addTransaction(tx) {
-    setTransactions((prev) => [...prev, tx]);
+  // 🔹 Criar transação
+  async function addTransaction(tx) {
+    try {
+      const newTransaction = await createTransaction({
+        ...tx,
+        userId: user.id,
+      });
+
+      setTransactions((prev) => [...prev, newTransaction]);
+    } catch (error) {
+      console.error("Erro ao criar transação:", error);
+    }
   }
 
-  function removeTransaction(index) {
-    setTransactions((prev) => prev.filter((_, i) => i !== index));
+  // 🔹 Remover transação
+  async function removeTransaction(id) {
+    try {
+      await deleteTransaction(id);
+
+      setTransactions((prev) =>
+        prev.filter((transaction) => transaction.id !== id)
+      );
+    } catch (error) {
+      console.error("Erro ao deletar transação:", error);
+    }
   }
 
-  const filteredTransactions = transactions.filter((t) =>
-    filter === "all" ? true : t.type === filter
-  );
+  const filteredTransactions =
+    filter === "all"
+      ? transactions
+      : transactions.filter((t) => t.type === filter);
 
   return (
     <CreditProvider>
-      <div
-        className="
-          min-h-screen p-4 sm:p-6
-          bg-gradient-to-br 
-          from-zinc-100 via-zinc-200 to-white
-          dark:from-zinc-900 dark:via-zinc-800 dark:to-black
-          transition-colors duration-300
-        "
-      >
+      <div className="min-h-screen p-6 bg-gradient-to-br from-zinc-100 via-zinc-200 to-white dark:from-zinc-950 dark:via-zinc-900 dark:to-black transition-colors duration-500">
         <div className="max-w-6xl mx-auto space-y-10">
 
           {/* HEADER */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white mb-2">
+              <h1 className="text-4xl font-bold text-zinc-900 dark:text-white">
                 Dashboard Financeiro
               </h1>
-              <p className="text-zinc-600 dark:text-zinc-400">
-                Controle simples e visual das suas finanças
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                Logado como: {user.email}
               </p>
             </div>
 
-            <button
-              onClick={toggleTheme}
-              className="
-                px-4 py-2 rounded-xl text-sm font-medium
-                bg-zinc-900 text-white
-                dark:bg-white dark:text-black
-                transition-all
-              "
-            >
-              {theme === "dark" ? "☀️ Claro" : "🌙 Escuro"}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={toggleTheme}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-zinc-900 text-white dark:bg-white dark:text-black transition-all"
+              >
+                {theme === "dark" ? "☀️ Claro" : "🌙 Escuro"}
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-all"
+              >
+                Sair
+              </button>
+            </div>
           </div>
 
           {/* CARDS */}
@@ -134,14 +155,7 @@ export default function Dashboard() {
           </div>
 
           {/* GRÁFICO */}
-          <div
-            className="
-              rounded-3xl p-4 sm:p-6 backdrop-blur
-              bg-white border border-zinc-200
-              dark:bg-white/10 dark:border-white/10
-              transition
-            "
-          >
+          <div className="rounded-3xl p-6 backdrop-blur bg-white border border-zinc-200 dark:bg-white/10 dark:border-white/10">
             <FinanceChart
               income={totals.income}
               expense={totals.expense}
@@ -153,38 +167,23 @@ export default function Dashboard() {
 
           {/* FILTROS */}
           <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setFilter("all")}
-              className={`px-4 py-1 rounded-full text-sm transition ${
-                filter === "all"
-                  ? "bg-zinc-900 text-white dark:bg-white dark:text-black"
-                  : "bg-zinc-200 text-zinc-800 dark:bg-white/10 dark:text-white"
-              }`}
-            >
-              Todas
-            </button>
-
-            <button
-              onClick={() => setFilter("income")}
-              className={`px-4 py-1 rounded-full text-sm transition ${
-                filter === "income"
-                  ? "bg-green-600 text-white"
-                  : "bg-zinc-200 text-zinc-800 dark:bg-white/10 dark:text-white"
-              }`}
-            >
-              Entradas
-            </button>
-
-            <button
-              onClick={() => setFilter("expense")}
-              className={`px-4 py-1 rounded-full text-sm transition ${
-                filter === "expense"
-                  ? "bg-red-600 text-white"
-                  : "bg-zinc-200 text-zinc-800 dark:bg-white/10 dark:text-white"
-              }`}
-            >
-              Saídas
-            </button>
+            {["all", "income", "expense"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setFilter(type)}
+                className={`px-4 py-1 rounded-full text-sm transition ${
+                  filter === type
+                    ? "bg-zinc-900 text-white dark:bg-white dark:text-black"
+                    : "bg-zinc-200 text-zinc-800 dark:bg-white/10 dark:text-white"
+                }`}
+              >
+                {type === "all"
+                  ? "Todas"
+                  : type === "income"
+                  ? "Entradas"
+                  : "Saídas"}
+              </button>
+            ))}
           </div>
 
           {/* LISTA */}

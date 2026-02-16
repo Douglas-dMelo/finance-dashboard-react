@@ -1,40 +1,47 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { loginUser } from "@/services/authService";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // ✅ adicionamos controle de carregamento
 
   // 🔄 Carrega usuário salvo ao iniciar app
   useEffect(() => {
-    const savedUser = localStorage.getItem("finance-user");
+    try {
+      const savedUser = localStorage.getItem("finance-user");
 
-    if (savedUser) {
-      try {
+      if (savedUser) {
         setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error("Erro ao recuperar usuário:", error);
-        localStorage.removeItem("finance-user");
       }
+    } catch (error) {
+      console.error("Erro ao recuperar usuário:", error);
+      localStorage.removeItem("finance-user");
+    } finally {
+      setLoading(false); // ✅ evita bug de renderização precoce
     }
   }, []);
 
-  // 🔐 Login (modo estudo - sem backend real)
-  function login(email) {
-    if (!email || !email.includes("@")) {
-      alert("Digite um email válido");
-      return;
-    }
-
-    const newUser = {
-      id: crypto.randomUUID(),
-      email,
-      createdAt: new Date().toISOString(),
-    };
-
-    setUser(newUser);
-    localStorage.setItem("finance-user", JSON.stringify(newUser));
+  // 🔐 Login usando API fake
+async function login(email) {
+  if (!email || !email.includes("@")) {
+    alert("Digite um email válido");
+    return false;
   }
+
+  try {
+    const userData = await loginUser(email);
+
+    setUser(userData);
+    localStorage.setItem("finance-user", JSON.stringify(userData));
+
+    return true; // 👈 ISSO É FUNDAMENTAL
+  } catch {
+    alert("Erro ao realizar login");
+    return false;
+  }
+}
 
   // 🚪 Logout
   function logout() {
@@ -48,6 +55,9 @@ export function AuthProvider({ children }) {
     logout,
     isAuthenticated: !!user,
   };
+
+  // ✅ evita renderizar a aplicação antes de saber se há usuário salvo
+  if (loading) return null;
 
   return (
     <AuthContext.Provider value={value}>

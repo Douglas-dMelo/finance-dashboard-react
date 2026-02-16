@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 // Componentes gerais
-import Header from "@/components/Header";
 import Card from "@/components/Card";
 import Form from "@/components/Form";
 import List from "@/components/List";
@@ -12,7 +12,11 @@ import CreditSection from "@/components/credit/CreditSection";
 import { CreditProvider } from "@/components/credit/CreditContext";
 
 export default function Dashboard() {
-  // ✅ CONTROLE DO TEMA AQUI
+  const { user } = useAuth(); // ✅ agora temos o user
+
+  // =========================
+  // 🎨 CONTROLE DE TEMA
+  // =========================
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("theme") || "dark";
   });
@@ -33,22 +37,35 @@ export default function Dashboard() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   }
 
-  // ---------------------
-
+  // =========================
+  // 💰 TRANSAÇÕES (MULTIUSER)
+  // =========================
   const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState("all");
 
+  // Carregar dados do usuário logado
   useEffect(() => {
-    const data = localStorage.getItem(`finance-${user?.email}`)
-    if (data) setTransactions(JSON.parse(data).transactions || []);
-  }, []);
+    if (!user) return;
 
+    const data = localStorage.getItem(`finance-${user.email}`);
+
+    if (data) {
+     setTransactions(JSON.parse(data));
+    } else {
+     setTransactions([]);
+   }
+}, [user]);
+
+  // Salvar dados do usuário logado
   useEffect(() => {
+    if (!user) return;
+
     localStorage.setItem(
-      "finance-dashboard",
-      JSON.stringify({ transactions })
-    );
-  }, [transactions]);
+      `finance-${user.email}`,
+    JSON.stringify(transactions)
+  );
+}, [transactions, user]);
+
 
   const totals = transactions.reduce(
     (acc, t) => {
@@ -75,14 +92,16 @@ export default function Dashboard() {
   return (
     <CreditProvider>
       <div
-        className="min-h-screen p-4 sm:p-6
-        bg-gradient-to-br 
-        from-zinc-100 via-zinc-200 to-white
-        dark:from-zinc-900 dark:via-zinc-800 dark:to-black
-        transition-colors duration-300"
+        className="
+          min-h-screen p-4 sm:p-6
+          bg-gradient-to-br 
+          from-zinc-100 via-zinc-200 to-white
+          dark:from-zinc-900 dark:via-zinc-800 dark:to-black
+          transition-colors duration-300
+        "
       >
         <div className="max-w-6xl mx-auto space-y-10">
-        <Header />
+
           {/* HEADER */}
           <div className="flex items-center justify-between">
             <div>
@@ -96,10 +115,12 @@ export default function Dashboard() {
 
             <button
               onClick={toggleTheme}
-              className="px-4 py-2 rounded-xl text-sm font-medium
-              bg-zinc-900 text-white
-              dark:bg-white dark:text-black
-              transition-all"
+              className="
+                px-4 py-2 rounded-xl text-sm font-medium
+                bg-zinc-900 text-white
+                dark:bg-white dark:text-black
+                transition-all
+              "
             >
               {theme === "dark" ? "☀️ Claro" : "🌙 Escuro"}
             </button>
@@ -114,10 +135,12 @@ export default function Dashboard() {
 
           {/* GRÁFICO */}
           <div
-            className="rounded-3xl p-4 sm:p-6 backdrop-blur
-            bg-white border border-zinc-200
-            dark:bg-white/10 dark:border-white/10
-            transition"
+            className="
+              rounded-3xl p-4 sm:p-6 backdrop-blur
+              bg-white border border-zinc-200
+              dark:bg-white/10 dark:border-white/10
+              transition
+            "
           >
             <FinanceChart
               income={totals.income}

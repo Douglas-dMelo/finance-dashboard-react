@@ -1,13 +1,20 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const { login } = useAuth();
+  const navigate = useNavigate();
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    login(email);
+
+    const success = await login(email);
+
+    if (success) {
+      navigate("/"); // 🔥 REDIRECIONA PARA DASHBOARD
+    }
   }
 
   return (

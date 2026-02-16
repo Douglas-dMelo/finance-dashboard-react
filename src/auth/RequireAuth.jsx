@@ -1,8 +1,12 @@
-import { useAuth } from "../context/AuthContext";
-import Login from "./Login";
+import { useAuth } from "@/context/AuthContext";
+import Login from "@/pages/Login";
 
 export default function RequireAuth({ children }) {
-  const { user } = useAuth();
-  if (!user) return <Login />;
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
   return children;
 }

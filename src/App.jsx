@@ -1,5 +1,10 @@
-import RoutesApp from "@/routes/routes";
+import RequireAuth from "./auth/RequireAuth";
+import Dashboard from "./pages/Dashboard";
 
 export default function App() {
-  return <RoutesApp />;
+  return (
+    <RequireAuth>
+      <Dashboard />
+    </RequireAuth>
+  );
 }
